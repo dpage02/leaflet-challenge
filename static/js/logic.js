@@ -6,35 +6,39 @@ d3.json(searchUrl, function (data) {
     createFeatures(data.features);
 });
 
+
+
+// Define a function we want to run once for each feature in the features array
+// Give each feature a popup describing the place and time of the earthquake
+function onEachFeature(feature, layer) {
+    layer.bindPopup("<h3>" + feature.properties.place +
+        "</h3><hr><p>" + new Date(feature.properties.time) + "</p>");
+}
+
+// funciton to change marker size
+function markerSize(magSize) {
+    return magSize * 10;
+}
+
+// function to change the color of the circle
+function chooseColor(magSize) {
+    var color = '';
+    if (magSize <= 1) {
+        color = "green"
+    }
+    else if (magSize > 1 && magSize <=2) {
+        color = 'yellow'
+    }
+    else if (magSize > 2 && magSize <= 3) {
+        color = 'orange'
+    }
+    else {
+        color = 'red'
+    }
+    return color;
+};
+
 function createFeatures(chartData) {
-
-    // Define a function we want to run once for each feature in the features array
-    // Give each feature a popup describing the place and time of the earthquake
-    function onEachFeature(feature, layer) {
-        layer.bindPopup("<h3>" + feature.properties.place +
-            "</h3><hr><p>" + new Date(feature.properties.time) + "</p>");
-    }
-
-    // funciton to change marker size
-    function markerSize(magSize) {
-        return magSize * 10;
-    }
-
-    // function to change the color of the circle
-    function chooseColor(magSize) {
-        var color = '';
-        if (magSize < 1) {
-            color = "green"
-        }
-        else if (magSize> 1 && magSize < 2) {
-            color = 'yellow'
-        }
-        else {
-            color = 'red'
-        }
-        return color;
-    };
-
     var quake = L.geoJSON(chartData, {
         pointToLayer: function (chartData, latlng) {
             return L.circleMarker(latlng, {
@@ -45,12 +49,12 @@ function createFeatures(chartData) {
             });
         }, onEachFeature: onEachFeature
 
-    // var bigQuakes = 
+        // var bigQuakes = 
     });
 
     createMap(quake)
 
-}
+};
 
 
 
@@ -84,7 +88,7 @@ function createMap(quake) {
         Earthquakes: quake
     };
 
-    
+
     // Create our map, giving it the streetmap and earthquakes layers to display on load
     var myMap = L.map("map", {
         center: [
@@ -95,50 +99,27 @@ function createMap(quake) {
     });
 
 
-    // var legend = L.control({position: 'bottomleft'});
-    // legend.onAdd = function (map) {
-
-    // var div = L.DomUtil.create('div', 'info legend');
-    // labels = ['<strong>Categories</strong>'],
-    // categories = ['Road Surface','Signage','Line Markings','Roadside Hazards','Other'];
-
-    // for (var i = 0; i < categories.length; i++) {
-
-    //         div.innerHTML += 
-    //         labels.push(
-    //             '<i class="circle" style="background:' + getColor(categories[i]) + '"></i> ' +
-    //         (categories[i] ? categories[i] : '+'));
-
-    //     }
-    //     div.innerHTML = labels.join('<br>');
-    // return div;
-    // };
-    // legend.addTo(myMap);
-
-    // Create a layer control
-    // Pass in our baseMaps and overlayMaps
-    // Add the layer control to the map
     L.control.layers(baseMaps, overlayMaps, {
         collapsed: false
     }).addTo(myMap);
 
-    var legend = L.control({position: 'bottomleft'});
-    legend.onAdd = function (map) {
+    // Legend
+    var legend = L.control({ position: 'bottomright' });
 
-    var div = L.DomUtil.create('div', 'info legend');
-    labels = ['<strong>Categories</strong>'],
-    categories = ['Road Surface','Signage','Line Markings','Roadside Hazards','Other'];
+    legend.onAdd = function () {
 
-    for (var i = 0; i < categories.length; i++) {
-
-            div.innerHTML += 
-            labels.push(
-                '<i class="circle" style="background:' + getColor(categories[i]) + '"></i> ' +
-            (categories[i] ? categories[i] : '+'));
-
+        var div = L.DomUtil.create('div', 'info legend'),
+            mags = ["0-1","1.01-2","2.01-3", "< 4"];
+      
+        for (var i = 0; i < mags.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + chooseColor(mags[i] +1) + '"></i> ' +
+                (mags[i] ? mags[i] + '<br>' : '+');
         }
-        div.innerHTML = labels.join('<br>');
-    return div;
+
+        return div;
+
     };
+
     legend.addTo(myMap);
 }
